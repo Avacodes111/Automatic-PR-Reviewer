@@ -1,0 +1,47 @@
+name: AI PR Review
+
+# Runs a thorough automated review on every PR open/update and saves a
+# report — it does not post a PR comment (see README.md to add that).
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run PR reviewer
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          python pr_reviewer.py \
+            --repo "${{ github.repository }}" \
+            --pr "${{ github.event.pull_request.number }}" \
+            --output pr_review_report.md
+
+      - name: Add report to job summary
+        if: always()
+        run: |
+          if [ -f pr_review_report.md ]; then
+            cat pr_review_report.md >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload report as artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr-review-report
+          path: pr_review_report.md
