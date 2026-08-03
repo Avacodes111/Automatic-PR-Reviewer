@@ -87,3 +87,5 @@ To enable it:
 - Findings are only as good as the diff content GitHub returns; if a file's
   patch is omitted (huge diffs, some binary/generated files), it's listed
   under "Skipped Files" rather than silently ignored.
+
+  <!-- test -->
